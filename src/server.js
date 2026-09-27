@@ -9,17 +9,18 @@ dotenv.config();
 
 const app = express();
 const PORT = process.env.PORT || 5000;
-const CLIENT_URL = process.env.CLIENT_URL || 'http://localhost:5173';
+const CLIENT_URL = process.env.CLIENT_URL || '*';
 
-app.use(cors({ origin: CLIENT_URL }));
+// In serverless, allow all origins or specific Vercel client URL
+app.use(cors({ origin: CLIENT_URL === '*' ? true : CLIENT_URL }));
 app.use(express.json());
 
-// Mount API Routes
+// Routes
 app.use('/api/leads', leadRoutes);
 app.use('/api/dashboard', dashboardRoutes);
 
 app.get('/', (req, res) => {
-  res.send('AI Lead Platform Backend is running. Visit /api/health for system status.');
+  res.send('AI Lead Platform Backend running on Vercel Serverless.');
 });
 
 app.get('/api/health', async (req, res) => {
@@ -35,6 +36,12 @@ app.get('/api/health', async (req, res) => {
   }
 });
 
-app.listen(PORT, () => {
-  console.log(`Server running on http://localhost:${PORT}`);
-});
+// Only listen locally (Vercel invokes the exported app directly)
+if (process.env.NODE_ENV !== 'production') {
+  app.listen(PORT, () => {
+    console.log(`Server running on http://localhost:${PORT}`);
+  });
+}
+
+// CRUCIAL FOR VERCEL: Export the Express app
+export default app;

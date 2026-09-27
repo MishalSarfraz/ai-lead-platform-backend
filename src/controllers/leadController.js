@@ -71,6 +71,15 @@ export async function createLead(req, res) {
       console.error('Background automation trigger error:', err.message);
     });
 
+    // Await the webhook dispatch before returning the response on Vercel
+await triggerLeadWorkflow(savedLead);
+
+return res.status(201).json({
+  success: true,
+  message: 'Lead captured and qualified successfully!',
+  lead: savedLead,
+});
+    
     // 4. Return instant response to client
     return res.status(201).json({
       success: true,

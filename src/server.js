@@ -9,11 +9,19 @@ dotenv.config();
 
 const app = express();
 const PORT = process.env.PORT || 5000;
-const CLIENT_URL = process.env.CLIENT_URL || '*';
 
-// In serverless, allow all origins or specific Vercel client URL
-app.use(cors({ origin: CLIENT_URL === '*' ? true : CLIENT_URL }));
+// Enable CORS for all origins or specific frontend URL
+app.use(cors({
+  origin: true, // Dynamically allows the requesting origin
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization'],
+}));
+
 app.use(express.json());
+
+// Explicitly answer preflight requests
+app.options('*', cors());
 
 // Routes
 app.use('/api/leads', leadRoutes);
@@ -36,12 +44,10 @@ app.get('/api/health', async (req, res) => {
   }
 });
 
-// Only listen locally (Vercel invokes the exported app directly)
 if (process.env.NODE_ENV !== 'production') {
   app.listen(PORT, () => {
     console.log(`Server running on http://localhost:${PORT}`);
   });
 }
 
-// CRUCIAL FOR VERCEL: Export the Express app
 export default app;
